@@ -1,9 +1,10 @@
+
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 import os
 
-BASE_PATH = "C:/Users/Work-User/Desktop/model/"
+BASE_PATH = "/content/drive/My Drive/beijing_data/"
 
 def create_local_model():
     model = tf.keras.Sequential([
@@ -26,30 +27,30 @@ def get_weights(model):
         concatenated = np.concatenate(flattened)
         return concatenated
     except ValueError as e:
-        print(f"Error in concatenating weights: {e}")
+        print(f"Error concatenating weights: {e}")
         raise
 
 def train_local_models(X_nodes, y_nodes, X_test, y_test):
-    print("\nStep 2: Local training on nodes (time series, 5 classes)")
+    print("\nStep 2: Local Training on Nodes (Time Series, 5-Class)")
     local_models = []
     for i, (X_n, y_n) in enumerate(zip(X_nodes, y_nodes)):
         print(f"\nNode {i+1}:")
         if len(X_n) < 2:
-            print("Not enough data")
+            print("Insufficient data")
             continue
         model = create_local_model()
         X_train, X_test_local, y_train, y_test_local = train_test_split(
             X_n, y_n, test_size=0.2, random_state=42, stratify=y_n
         )
-        print(f"Training data size: {len(X_train)}, local test data: {len(X_test_local)}")
+        print(f"Training data size: {len(X_train)}, Local test data: {len(X_test_local)}")
         print(f"Class distribution in training data of node {i+1}: {np.bincount(y_train)}")
 
-        # Adjusted class weights
-        class_weights = {0: 3.0, 1: 2.0, 2: 1.0, 3: 1.0, 4: 1.0}  # More balanced
+        # Updated class weights
+        class_weights = {0: 3.0, 1: 2.0, 2: 1.0, 3: 1.0, 4: 1.0}  # More balancing
         model.fit(X_train, y_train, epochs=10, batch_size=128, verbose=0, class_weight=class_weights)
 
         loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
-        print(f"Local accuracy (on central test): {accuracy:.4f}, loss: {loss:.4f}")
+        print(f"Local accuracy (on central test set): {accuracy:.4f}, Loss: {loss:.4f}")
         local_models.append(model)
 
     if not local_models:
@@ -68,6 +69,6 @@ if __name__ == "__main__":
         X_test = np.load(os.path.join(BASE_PATH, 'X_test_5class_timeseries168-1.npy'))
         y_test = np.load(os.path.join(BASE_PATH, 'y_test_5class_timeseries168-1.npy'))
     except FileNotFoundError as e:
-        print(f"Error in loading data: {e}")
+        print(f"Error loading data: {e}")
         raise
     local_models = train_local_models(X_nodes, y_nodes, X_test, y_test)
