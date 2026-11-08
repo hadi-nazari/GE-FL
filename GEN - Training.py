@@ -1,3 +1,4 @@
+
 import numpy as np
 from deap import base, creator, tools
 import random
@@ -5,7 +6,9 @@ from sklearn.metrics import accuracy_score, f1_score
 import tensorflow as tf
 import os
 
-BASE_PATH = "C:/Users/Work-User/Desktop/model/"
+
+
+BASE_PATH = "/content/drive/My Drive/beijing_data"
 
 def create_local_model():
     model = tf.keras.Sequential([
@@ -28,7 +31,7 @@ def get_weights(model):
         concatenated = np.concatenate(flattened)
         return concatenated
     except ValueError as e:
-        print(f"Error in concatenating weights: {e}")
+        print(f"Error concatenating weights: {e}")
         raise
 
 def set_weights(model, weights):
@@ -54,7 +57,7 @@ def evaluate_individual(individual, test_model, X_test, y_test):
     try:
         set_weights(test_model, individual_array)
     except Exception as e:
-        print(f"Error in setting weights: {e}")
+        print(f"Error setting weights: {e}")
         return 0.0,
     y_pred_proba = test_model.predict(X_test, verbose=0)
     y_pred = np.argmax(y_pred_proba, axis=1)
@@ -70,7 +73,7 @@ def evaluate_individual(individual, test_model, X_test, y_test):
     return fitness,
 
 def run_genetic_algorithm(local_models, X_test, y_test):
-    print("\nStep 3: Running genetic algorithm (time series, 5 classes)")
+    print("\nStep 3: Running Genetic Algorithm (Time Series, 5-Class)")
     global COMPRESSION_THRESHOLD, POP_SIZE, GENERATIONS
     COMPRESSION_THRESHOLD = 0.05
     POP_SIZE = 20
@@ -89,7 +92,7 @@ def run_genetic_algorithm(local_models, X_test, y_test):
     test_model = create_local_model()
     pop = toolbox.population(n=POP_SIZE)
 
-    # Add list to store accuracy per generation
+    # Add a list to store the accuracy of each generation
     accuracies_per_gen = []
 
     hof = tools.HallOfFame(1)
@@ -115,7 +118,7 @@ def run_genetic_algorithm(local_models, X_test, y_test):
         pop = offspring
         hof.update(pop)
 
-        # Calculate accuracy of the best individual in this generation
+        # Calculate the accuracy of the best individual in this generation
         best_individual = hof[0]
         best_individual_array = np.array(best_individual)
         best_individual_array[np.abs(best_individual_array) < COMPRESSION_THRESHOLD] = 0
@@ -149,5 +152,5 @@ if __name__ == "__main__":
             local_models.append(model)
         global_model = run_genetic_algorithm(local_models, X_test, y_test)
     except FileNotFoundError as e:
-        print(f"Error in loading files: {e}")
+        print(f"Error loading files: {e}")
         raise
